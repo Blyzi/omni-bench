@@ -1,0 +1,9 @@
+{
+    "exclude": [
+        "images/",
+        ".venv/",
+        "__pycache__/",
+        "logs/",
+        ".ruff_cache/"
+    ]
+}

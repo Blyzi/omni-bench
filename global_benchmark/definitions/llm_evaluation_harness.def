@@ -1,0 +1,15 @@
+Bootstrap: docker
+From: python:3.9-slim
+
+%post
+    # Install system dependencies
+    apt-get update
+    apt-get install -y --no-install-recommends git
+    rm -rf /var/lib/apt/lists/*
+
+    git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
+    cd lm-evaluation-harness
+    pip install --upgrade pip
+    pip install -e .
+    pip install lm_eval[vllm]
+    pip install transformers --upgrade
