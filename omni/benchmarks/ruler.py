@@ -100,7 +100,7 @@ class RulerRunner(BenchmarkRunner):
                     f"export MODEL_FRAMEWORK=vllm && "
                     f"export GPUS={self.run_config.tensor_parallel_size} && "
                     f"export THREADS={self.benchmark_config.ruler.thread_count} && "
-                    f"export SEQ_LENGTHS=({' '.join(context_lengths)}) && "
+                    f"export SEQ_LENGTHS='{' '.join(context_lengths)}' && "
                     f"./run.sh {model} synthetic' "
                 ),
                 container=True,

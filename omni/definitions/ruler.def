@@ -23,7 +23,7 @@ From: python:3.10-slim
     # Bad permission for run.sh
     cd /RULER/scripts
     awk '!/^GPUS="1"( |$)/' run.sh > tmp && mv tmp run.sh
-    awk '/^SEQ_LENGTHS=\($/ {skip=1; next} /^\)$/ && skip {skip=0; next} !skip' config_models.sh > tmp && mv tmp config_models.sh
+    awk '/^SEQ_LENGTHS=\($/ {print "# Convert string to array if SEQ_LENGTHS is a string"; print "if [ -n \"${SEQ_LENGTHS}\" ] && [[ ! \"$(declare -p SEQ_LENGTHS 2>/dev/null)\" =~ \"declare -a\" ]]; then"; print "    SEQ_LENGTHS=($SEQ_LENGTHS)"; print "fi"; skip=1; next} /^\)$/ && skip {skip=0; next} !skip' config_models.sh > tmp && mv tmp config_models.sh
     chmod +x run.sh
 
 
