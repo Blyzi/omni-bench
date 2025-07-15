@@ -157,15 +157,7 @@ class RulerRunner(BenchmarkRunner):
     def save(self, model: str, task: Task):
         """
         Save the results of the benchmark.
+        TODO: Implement the save logic for RulerRunner
         """
 
-        return
-
-        filename = next(
-            Path(f"results/temp/{self.run_id}/{task}").rglob("*.json"), None
-        )
-
-        if filename is not None:
-            with open(filename, "r") as f:
-                result = json.load(f)
-                self.store(model, task, result["results"][task])
+    pass
