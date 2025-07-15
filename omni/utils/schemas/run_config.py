@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 from pydantic import Field, BaseModel
 from omni.utils.enums import Precision
 from omni.utils.schemas.apptainer_bind import ApptainerBind
@@ -18,4 +19,8 @@ class RunConfig(BaseModel):
     )
     images_directory: Path = Field(
         description="Directory containing images to include in the Apptainer container",
+    )
+    prescript: Optional[str] = Field(
+        default=None,
+        description="Optional script to run before the main command in the container",
     )

@@ -1,5 +1,5 @@
 from typing import List, Union
-from omni.utils.schemas import RunConfig, SlurmConfig
+from omni.utils.schemas import RunConfig, SlurmConfig, BenchmarkConfig
 from omni.utils.enums import Task, Benchmark
 from omni.utils.maps import benchmark_map, task_map
 from collections import defaultdict
@@ -11,6 +11,7 @@ def run(
     model: str,
     tasks: List[Task],
     run_config: RunConfig,
+    benchmark_config: BenchmarkConfig,
     slurm_config: Union[None, SlurmConfig] = None,
 ) -> None:
     """
@@ -34,7 +35,9 @@ def run(
     frameworks: dict[Benchmark, type] = {}
 
     for key, val in dict(tasks_group).items():
-        frameworks[key] = benchmark_map[key](run_id, run_config, slurm_config)
+        frameworks[key] = benchmark_map[key](
+            run_id, run_config, benchmark_config, slurm_config
+        )
 
         if frameworks[key].needs_parameters:
             print(

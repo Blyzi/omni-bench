@@ -51,6 +51,7 @@ def run(
         model,
         tasks,
         run_config=services.get_run_config(),
+        benchmark_config=services.get_benchmark_config(),
         slurm_config=services.get_slurm_config() if slurm else None,
     )
 

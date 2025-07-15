@@ -55,6 +55,32 @@ def get_slurm_config() -> SlurmConfig:
     return config
 
 
+def get_benchmark_config() -> BenchmarkConfig:
+    """
+    Get the benchmark config from the config.yml file or use the default values.
+    """
+    if os.path.exists("config.yml"):
+        with open("config.yml", "r") as f:
+            config_text = os.path.expandvars(f.read())
+            config = yaml.safe_load(config_text)
+
+            if not isinstance(config, dict) or "benchmarks" not in config:
+                raise typer.BadParameter(
+                    "config.yml does not contain 'benchmarks' section."
+                )
+    else:
+        raise typer.BadParameter(
+            "config.yml file not found. Please generate it using `omni config`."
+        )
+
+    try:
+        config = BenchmarkConfig(**config["benchmarks"])
+    except ValidationError as e:
+        raise typer.BadParameter(f"\n{e}")
+
+    return config
+
+
 def gen_config():
     """
     Generate a config.yml file with default values.

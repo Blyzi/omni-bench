@@ -9,6 +9,17 @@ class LlmEvaluationHarnessConfig(BaseModel):
     )
 
 
+class RulerConfig(BaseModel):
+    """
+    Configuration for the Ruler benchmark.
+    """
+
+    thread_count: int = Field(
+        default=4,
+        description="Number of threads to use for the benchmark.",
+    )
+
+
 class BenchmarkConfig(BaseModel):
     """
     Configuration for the benchmark.
@@ -18,4 +29,10 @@ class BenchmarkConfig(BaseModel):
         default_factory=LlmEvaluationHarnessConfig,
         alias=Benchmark.LLM_EVALUATION_HARNESS.value,
         serialization_alias=Benchmark.LLM_EVALUATION_HARNESS.value,
+    )
+
+    ruler: RulerConfig = Field(
+        default_factory=RulerConfig,
+        alias=Benchmark.RULER.value,
+        serialization_alias=Benchmark.RULER.value,
     )

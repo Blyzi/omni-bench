@@ -6,6 +6,7 @@ import os
 import json
 from omni.utils.enums import Benchmark, Task
 from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind, BenchmarkConfig
+from rich import print
 
 
 class BenchmarkRunner(metaclass=ABCMeta):
@@ -51,15 +52,21 @@ class BenchmarkRunner(metaclass=ABCMeta):
         )
 
         if slurm_partition == "cpu":
-            cmd += " ".join(
-                f"--{key}={value}"
-                for key, value in self.slurm_config.cpu_partition.model_dump().items()
+            cmd += (
+                " ".join(
+                    f"--{key.replace('_', '-')}='{value}'"
+                    for key, value in self.slurm_config.cpu_partition.model_dump().items()
+                )
+                + " "
             )
 
         elif slurm_partition == "gpu":
-            cmd += " ".join(
-                f"--{key}={value}"
-                for key, value in self.slurm_config.gpu_partition.model_dump().items()
+            cmd += (
+                " ".join(
+                    f"--{key.replace('_', '-')}='{value}'"
+                    for key, value in self.slurm_config.gpu_partition.model_dump().items()
+                )
+                + " "
             )
 
         if self.slurm_config.account:
@@ -81,16 +88,12 @@ class BenchmarkRunner(metaclass=ABCMeta):
         Get the Apptainer command for the benchmark.
         """
 
-        cmd = (
-            "apptainer "
-            "exec "
-            "--nv "
-            "-c "
-            f"--cwd {cwd} "
-            f"-B {','.join((bind.source.as_posix() + ':' + bind.target.as_posix() for bind in self.run_config.binds + binds))} "
-            f"{image} "
-            f"{command} "
-        )
+        cmd = f"apptainer exec --nv -c --cwd {cwd} "
+
+        if len(self.run_config.binds + binds) > 0:
+            cmd += f"-B {','.join((bind.source.as_posix() + ':' + bind.target.as_posix() for bind in self.run_config.binds + binds))} "
+
+        cmd += f"{image} {command} "
 
         return cmd
 
@@ -110,6 +113,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
             check=True,
             text=slurm,
             env=os.environ.copy(),
+            stdout=subprocess.PIPE if slurm else None,
         )
 
         job_id = output.stdout.strip().split()[-1] if slurm else ""
