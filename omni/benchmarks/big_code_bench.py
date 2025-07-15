@@ -75,7 +75,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                     ),
                     container=True,
                     slurm=slurm,
-                    slurm_partition="gpu",
+                    slurm_compute="gpu",
                 ),
                 slurm=slurm,
             )
@@ -85,7 +85,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                     f"cp -r ./results/temp/{self.run_id}/{task}_{temperature}_{n_samples} ./results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples}",
                     container=False,
                     slurm=slurm,
-                    slurm_partition="cpu",
+                    slurm_compute="cpu",
                     slurm_dependency=[bench_job],
                 ),
                 slurm=slurm,
@@ -107,7 +107,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                     container=True,
                     benchmark_eval=True,
                     slurm=slurm,
-                    slurm_partition="cpu",
+                    slurm_compute="cpu",
                     slurm_dependency=[copy_job],
                 ),
                 slurm=slurm,
@@ -129,7 +129,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                     container=True,
                     benchmark_eval=True,
                     slurm=slurm,
-                    slurm_partition="cpu",
+                    slurm_compute="cpu",
                     slurm_dependency=[copy_job],
                 ),
                 slurm=slurm,
@@ -142,7 +142,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                 f"uv run omni save {self.run_id} {task} {model}",
                 container=False,
                 slurm=slurm,
-                slurm_partition="cpu",
+                slurm_compute="cpu",
                 slurm_dependency=jobs,
             ),
             slurm=slurm,
@@ -153,7 +153,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
         command: str,
         container: bool,
         slurm: bool,
-        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_compute: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
         benchmark_eval: bool = False,
     ):
@@ -169,7 +169,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
             )
 
         if slurm:
-            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
+            command = self.get_slurm_command(command, slurm_compute, slurm_dependency)
 
         return command
 

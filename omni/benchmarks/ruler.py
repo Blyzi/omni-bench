@@ -79,7 +79,7 @@ class RulerRunner(BenchmarkRunner):
                 f"mkdir -p ./results/temp/{self.run_id}/{Task.RULER_SYNTHETIC}",
                 container=False,
                 slurm=slurm,
-                slurm_partition="cpu",
+                slurm_compute="cpu",
             ),
             slurm=slurm,
         )
@@ -105,7 +105,7 @@ class RulerRunner(BenchmarkRunner):
                 ),
                 container=True,
                 slurm=slurm,
-                slurm_partition="gpu",
+                slurm_compute="gpu",
                 slurm_dependency=[mkdir_job],
             ),
             slurm=slurm,
@@ -116,7 +116,7 @@ class RulerRunner(BenchmarkRunner):
                 f"uv run omni save {self.run_id} {task} {model}",
                 container=False,
                 slurm=slurm,
-                slurm_partition="cpu",
+                slurm_compute="cpu",
                 slurm_dependency=[ruler_job],
             ),
             slurm=slurm,
@@ -127,7 +127,7 @@ class RulerRunner(BenchmarkRunner):
         command: str,
         container: bool,
         slurm: bool,
-        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_compute: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
     ):
         """
@@ -150,7 +150,7 @@ class RulerRunner(BenchmarkRunner):
             )
 
         if slurm:
-            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
+            command = self.get_slurm_command(command, slurm_compute, slurm_dependency)
 
         return command
 

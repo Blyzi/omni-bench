@@ -29,7 +29,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
     def get_slurm_command(
         self,
         command: str,
-        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_compute: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
     ) -> str:
         """
@@ -54,7 +54,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
             ["afterok:" + ":".join(slurm_dependency)] if slurm_dependency else []
         )
 
-        if slurm_partition == "cpu":
+        if slurm_compute == "cpu":
             cmd += (
                 " ".join(
                     f"--{key.replace('_', '-')}='{value}'"
@@ -63,7 +63,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
                 + " "
             )
 
-        elif slurm_partition == "gpu":
+        elif slurm_compute == "gpu":
             cmd += (
                 " ".join(
                     f"--{key.replace('_', '-')}='{value}'"
@@ -138,7 +138,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
         command: str,
         container: bool,
         slurm: bool,
-        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_compute: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
     ) -> str:
         """

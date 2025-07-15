@@ -100,8 +100,8 @@ def gen_config():
                     images_directory=Path("images"),
                 ).model_dump(mode="json"),
                 "slurm": SlurmConfig(
-                    cpu_partition=SlurmJobConfig(),
-                    gpu_partition=SlurmJobConfig(),
+                    cpu=SlurmJobConfig(),
+                    gpu=SlurmJobConfig(),
                 ).model_dump(mode="json"),
                 "benchmarks": BenchmarkConfig().model_dump(mode="json", by_alias=True),
             },

@@ -46,7 +46,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
                 ),
                 container=True,
                 slurm=slurm,
-                slurm_partition="gpu",
+                slurm_compute="gpu",
             ),
             slurm=slurm,
         )
@@ -56,7 +56,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
                 f"uv run omni save {self.run_id} {task} {model}",
                 container=False,
                 slurm=slurm,
-                slurm_partition="cpu",
+                slurm_compute="cpu",
                 slurm_dependency=[job],
             ),
             slurm=slurm,
@@ -67,7 +67,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
         command: str,
         container: bool,
         slurm: bool,
-        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_compute: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
     ):
         """
@@ -82,7 +82,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
             )
 
         if slurm:
-            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
+            command = self.get_slurm_command(command, slurm_compute, slurm_dependency)
 
         return command
 
