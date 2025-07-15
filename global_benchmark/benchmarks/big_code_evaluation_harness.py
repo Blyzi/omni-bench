@@ -1,26 +1,29 @@
 import ast
-import subprocess
+import json
+from pathlib import Path
+from typing import List, Literal, Union
 import inquirer
 import typer
 from global_benchmark.benchmarks import BenchmarkRunner
-from global_benchmark.utils import BenchmarkFramework, Task, RunInfo, SlurmInfo
-from rich import print
+from global_benchmark.utils.enums import Benchmark, Task
+from global_benchmark.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
+from global_benchmark.utils.functions import get_short_precision
 
 
 class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
+    needs_parameters = True
+
     def __init__(
         self,
         run_id: str,
-        run_info: RunInfo,
-        slurm_info: SlurmInfo,
-        images_directory: str,
+        run_config: RunConfig,
+        slurm_config: SlurmConfig,
     ):
         super().__init__(
             run_id,
-            BenchmarkFramework.BIG_CODE_BENCHMARK,
-            run_info,
-            slurm_info,
-            images_directory,
+            Benchmark.BIG_CODE_EVALUATION_HARNESS,
+            run_config,
+            slurm_config,
         )
 
     def get_parameters(self):
@@ -54,78 +57,102 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
         Run the benchmark.
         """
 
+        jobs = []
+
         for temperature, n_samples in self.parameters:
-            if task == Task.MULTIPLE:
-                for subtask in [
-                    "multiple-cljcpp",
-                    "multiple-cs",
-                    "multiple-d",
-                    "multiple-dart",
-                    "multiple-elixir",
-                    "multiple-go",
-                    "multiple-hs",
-                    "multiple-java",
-                    "multiple-jl",
-                    "multiple-js",
-                    "multiple-lua",
-                    "multiple-mlpl",
-                    "multiple-php",
-                    "multiple-py",
-                    "multiple-r",
-                    "multiple-rb",
-                    "multiple-rkt",
-                    "multiple-rs",
-                    "multiple-scala",
-                    "multiple-sh",
-                    "multiple-swift",
-                    "multiple-ts",
-                ]:
-                    self.exec(
-                        (
-                            "accelerate launch main.py "
-                            f"--model {model} "
-                            f"--tasks {subtask} "
-                            f"--temperature {temperature} "
-                            f"--n_samples {n_samples} "
-                            f"--precision {self.run_info['dtype']} "
-                            "--allow_code_execution "
-                            f"--metric_output_path /results/temp/{self.run_id}/{subtask}.json "
-                        ),
-                        slurm,
-                    )
+            create_folder_job = self.exec(
+                self.command_wrapper(
+                    f"mkdir -p ./results/temp/{self.run_id}/{task} ",
+                    apptainer=False,
+                    slurm=slurm,
+                    slurm_partition="cpu",
+                ),
+                slurm=slurm,
+            )
 
-            else:
-                self.exec(
-                    (
-                        "accelerate launch main.py "
-                        f"--model {model} "
-                        f"--tasks {task} "
-                        f"--temperature {temperature} "
-                        f"--n_samples {n_samples} "
-                        f"--precision {self.run_info['dtype']} "
-                        "--allow_code_execution "
-                        f"--metric_output_path /results/temp/{self.run_id}/{task}.json "
-                    ),
-                    slurm,
-                )
+            cmd = (
+                "accelerate launch main.py "
+                f"--model {model} "
+                f"--tasks {task} "
+                f"--precision {get_short_precision(self.run_config.dtype)} "
+                "--allow_code_execution "
+                f"--metric_output_path /results/temp/{self.run_id}/{task}/{task}_{temperature}_{n_samples}.json "
+                f"--temperature {temperature} "
+                f"--n_samples {n_samples} "
+            )
 
-    def exec(self, command: str, slurm: bool) -> subprocess.CompletedProcess:
+            if temperature == 0:
+                cmd += "--do_sample=False "
+
+            benchmark_job = self.exec(
+                self.command_wrapper(
+                    cmd,
+                    apptainer=True,
+                    slurm=slurm,
+                    slurm_dependency=[create_folder_job],
+                    slurm_partition="gpu",
+                ),
+                slurm=slurm,
+            )
+
+            jobs.append(benchmark_job)
+
+        self.exec(
+            self.command_wrapper(
+                f"uv run global-benchmark save {self.run_id} {task} {model}",
+                apptainer=False,
+                slurm=slurm,
+                slurm_partition="cpu",
+                slurm_dependency=jobs,
+            ),
+            slurm=slurm,
+        )
+
+    def command_wrapper(
+        self,
+        command: str,
+        apptainer: bool,
+        slurm: bool,
+        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_dependency: List[str] = [],
+    ) -> str:
         """
         Execute a command in the container.
         """
 
-        cmd = (
-            "apptainer "
-            "exec "
-            "--nv "
-            "-B ./results:/results,/scratch "
-            "--cwd /bigcode-evaluation-harness "
-            f"{self.images_directory}/{self.framework} "
-            f"{command}"
-        )
+        if apptainer:
+            command = self.get_apptainer_command(
+                command,
+                self.run_config.images_directory / self.framework.value,
+                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+                Path("/bigcode-evaluation-harness"),
+            )
 
         if slurm:
-            cmd = self.get_slurm_command(cmd)
+            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
 
-        print(f"[blue]Executing command: {cmd}[/blue]")
-        return subprocess.run(cmd, shell=True, check=True)
+        return command
+
+    def save(
+        self,
+        model: str,
+        task: Task,
+    ) -> None:
+        """
+        Save the results of the benchmark.
+        """
+
+        files = Path(f"results/temp/{self.run_id}/{task}").rglob("*.json")
+
+        for filename in files:
+            with open(filename, "r") as f:
+                data = json.load(f)
+                self.store(
+                    model,
+                    task,
+                    {
+                        **data[task],
+                        "temperature": data["config"]["temperature"],
+                        "n_samples": data["config"]["n_samples"],
+                    },
+                )

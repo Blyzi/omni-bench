@@ -1,10 +1,12 @@
-from typing import List, Union
+from pathlib import Path
+from typing import List
 import typer
 import inquirer
 from typing_extensions import Annotated
-from global_benchmark.utils import SlurmInfo, Task, BenchmarkFramework
+from global_benchmark.utils.enums import Task, Benchmark
 from global_benchmark import services
 import os
+
 
 os.environ["HF_ALLOW_CODE_EVAL"] = "1"
 
@@ -13,18 +15,9 @@ app = typer.Typer()
 
 @app.command()
 def run(
-    model: str = "",
-    tasks: Annotated[List[Task], typer.Option()] = [],
-    dtype: str = "auto",
-    tensor_parallel_size: int = 1,
-    images_directory: str = "./images",
+    model: Annotated[str, typer.Option("--model", "-m")] = "",
+    tasks: Annotated[List[Task], typer.Option("--tasks", "-t")] = [],
     slurm: bool = False,
-    slurm_partition: str = "",
-    slurm_gres: str = "",
-    slurm_cpus_per_gpu: int = 0,
-    slurm_mem: str = "",
-    slurm_account: str = "",
-    slurm_constraint: str = "",
 ):
     """
     Run the benchmark.
@@ -55,50 +48,27 @@ def run(
             raise typer.BadParameter("Please select at least one task.")
         tasks = response["tasks"]
 
-    slurm_info: Union[None, SlurmInfo] = None
-    if slurm:
-        if (
-            slurm_partition == ""
-            or slurm_gres == ""
-            or slurm_mem == 0
-            or slurm_cpus_per_gpu == 0
-        ):
-            raise typer.BadParameter(
-                "If slurm is enabled, slurm_partition, slurm_gres, slurm_mem, and slurm_cpus_per_gpu must be provided."
-            )
-
-        slurm_info = {
-            "partition": slurm_partition,
-            "gres": slurm_gres,
-            "account": slurm_account,
-            "mem": slurm_mem,
-            "cpus_per_gpu": slurm_cpus_per_gpu,
-            "constraint": slurm_constraint,
-        }
-
     services.run(
         model,
         tasks,
-        images_directory,
-        run_info={
-            "dtype": dtype,
-            "tensor_parallel_size": tensor_parallel_size,
-        },
-        slurm_info=slurm_info,
+        run_config=services.get_run_config(),
+        slurm_config=services.get_slurm_config() if slurm else None,
     )
 
 
 @app.command()
 def setup(
-    images_directory: str = "./images",
-    definitions: Annotated[List[BenchmarkFramework], typer.Option()] = [],
+    images_directory: Annotated[Path, typer.Option("--images-directory", "-i")] = Path(
+        "images"
+    ),
+    definitions: Annotated[List[Benchmark], typer.Option()] = [],
 ):
     """
     Setup the environment.
 
     Args:
         sif_images_directory (str): Directory to store SIF images.
-        definitions (List[BenchmarkFrameworks]): List of SIF images to build.
+        definitions (List[Benchmarks]): List of SIF images to build.
     """
 
     if definitions == []:
@@ -108,8 +78,7 @@ def setup(
                     "sif_images",
                     message="Select SIF images to build",
                     choices=[
-                        (benchmark.value, benchmark.value)
-                        for benchmark in BenchmarkFramework
+                        (benchmark.value, benchmark.value) for benchmark in Benchmark
                     ],
                 ),
             ]
@@ -119,6 +88,45 @@ def setup(
         definitions = response["sif_images"]
 
     services.setup(images_directory, definitions)
+
+
+@app.command()
+def config():
+    """
+    Generate a base configuration file.
+    """
+
+    services.gen_config()
+
+
+@app.command()
+def list():
+    """
+    List all available tasks.
+    """
+
+    typer.echo("Available tasks:")
+    for task in Task:
+        typer.echo(task.value)
+
+
+@app.command(hidden=True)
+def save(
+    run_id: str,
+    task: Task,
+    model: str,
+):
+    """
+    Save the results of the benchmark.
+    """
+
+    services.save(
+        run_id,
+        model,
+        task,
+        run_config=services.get_run_config(),
+        slurm_config=services.get_slurm_config(),
+    )
 
 
 if __name__ == "__main__":

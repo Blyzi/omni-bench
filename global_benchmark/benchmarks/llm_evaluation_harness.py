@@ -1,25 +1,23 @@
-import subprocess
+import json
 from global_benchmark.benchmarks import BenchmarkRunner
-from typing import Union
-from global_benchmark.utils import RunInfo, Task, SlurmInfo, BenchmarkFramework
-from rich import print
-import os
+from typing import List, Literal, Union
+from global_benchmark.utils.enums import Benchmark, Task
+from global_benchmark.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
+from pathlib import Path
 
 
 class LlmEvaluationHarnessRunner(BenchmarkRunner):
     def __init__(
         self,
         run_id: str,
-        run_info: RunInfo,
-        slurm_info: Union[None, SlurmInfo],
-        images_directory: str,
+        run_config: RunConfig,
+        slurm_config: Union[None, SlurmConfig],
     ):
         super().__init__(
             run_id,
-            BenchmarkFramework.LLM_EVALUATION_HARNESS,
-            run_info,
-            slurm_info,
-            images_directory,
+            Benchmark.LLM_EVALUATION_HARNESS,
+            run_config,
+            slurm_config,
         )
 
     def run(self, model: str, task: Task, slurm: bool = False):
@@ -31,44 +29,70 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
             task (Task): The task to execute.
         """
 
-        self.exec(
-            (
-                "lm_eval "
-                "--model vllm "
-                f"--model_args pretrained={model},tensor_parallel_size={self.run_info['tensor_parallel_size']},dtype={self.run_info['dtype']},gpu_memory_utilization=0.8 "
-                f"--tasks {task} "
-                "--batch_size auto "
-                f"--output_path ./results/temp/{self.run_id}/{task} "
-                "--confirm_run_unsafe_code "
+        job = self.exec(
+            self.command_wrapper(
+                (
+                    "lm_eval "
+                    "--model vllm "
+                    f"--model_args pretrained={model},tensor_parallel_size={self.run_config.tensor_parallel_size},dtype={self.run_config.dtype},gpu_memory_utilization=0.9 "
+                    f"--tasks {task} "
+                    "--batch_size auto "
+                    f"--output_path /results/temp/{self.run_id}/{task} "
+                    f"--log_samples "
+                    "--confirm_run_unsafe_code "
+                ),
+                apptainer=True,
+                slurm=slurm,
+                slurm_partition="gpu",
             ),
-            slurm,
+            slurm=slurm,
         )
 
-    def exec(
+        self.exec(
+            self.command_wrapper(
+                f"uv run global-benchmark save {self.run_id} {task} {model}",
+                apptainer=False,
+                slurm=slurm,
+                slurm_partition="cpu",
+                slurm_dependency=[job],
+            ),
+            slurm=slurm,
+        )
+
+    def command_wrapper(
         self,
         command: str,
+        apptainer: bool,
         slurm: bool,
+        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_dependency: List[str] = [],
     ):
         """
         Execute a command in the container.
         """
 
-        cmd = (
-            "apptainer "
-            "exec "
-            "--nv "
-            "-B /scratch "
-            f"{self.images_directory}/{self.framework} "
-            f"{command}"
-        )
+        if apptainer:
+            command = self.get_apptainer_command(
+                command,
+                self.run_config.images_directory / self.framework.value,
+                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+            )
 
         if slurm:
-            cmd = self.get_slurm_command(cmd)
+            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
 
-        print(f"[black]Running command: {cmd}[black]")
-        return subprocess.run(
-            cmd,
-            check=True,
-            shell=True,
-            env=os.environ.copy(),
+        return command
+
+    def save(self, model: str, task: Task):
+        """
+        Save the results of the benchmark.
+        """
+
+        filename = next(
+            Path(f"results/temp/{self.run_id}/{task}").rglob("*.json"), None
         )
+
+        if filename is not None:
+            with open(filename, "r") as f:
+                result = json.load(f)
+                self.store(model, task, result["results"][task])

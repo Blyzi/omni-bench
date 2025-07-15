@@ -1,9 +1,9 @@
 from enum import Enum
 
 
-class BenchmarkFramework(str, Enum):
+class Benchmark(str, Enum):
     """
-    Enum class for BenchmarkFrameworks.
+    Enum class for Benchmarks.
     """
 
     LLM_EVALUATION_HARNESS = "llm_evaluation_harness"

@@ -1,11 +1,13 @@
-import os
-import subprocess
+import json
+from pathlib import Path
+from typing import List, Literal, Union
 import typer
 from global_benchmark.benchmarks import BenchmarkRunner
 import inquirer
 import ast
-from global_benchmark.utils import BenchmarkFramework, RunInfo, Task, SlurmInfo
+from global_benchmark.utils.enums import Benchmark, Task
 from rich import print
+from global_benchmark.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
 
 
 class BigCodeBenchRunner(BenchmarkRunner):
@@ -14,16 +16,14 @@ class BigCodeBenchRunner(BenchmarkRunner):
     def __init__(
         self,
         run_id: str,
-        run_info: RunInfo,
-        slurm_info: SlurmInfo,
-        images_directory: str,
+        run_config: RunConfig,
+        slurm_config: SlurmConfig,
     ):
         super().__init__(
             run_id,
-            BenchmarkFramework.BIG_CODE_BENCHMARK,
-            run_info,
-            slurm_info,
-            images_directory,
+            Benchmark.BIG_CODE_BENCHMARK,
+            run_config,
+            slurm_config,
         )
 
         print(
@@ -55,82 +55,148 @@ class BigCodeBenchRunner(BenchmarkRunner):
         """
         Run the benchmark on the BigCode dataset.
         """
+        jobs = []
+
         for temperature, n_samples in self.parameters:
-            job_res = self.exec(
-                (
-                    "bigcodebench.generate "
-                    f"--model {model} "
-                    f"--temperature {temperature} "
-                    f"--n_samples {n_samples} "
-                    f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
-                    "--subset full "
-                    f"--tp {self.run_info['tensor_parallel_size']} "
-                    "--backend vllm "
-                    f"--root ./results/temp/{self.run_id}/{task}_{temperature}_{n_samples} "
-                    f"&& cp -r ./results/temp/{self.run_id}/{task}_{temperature}_{n_samples} ./results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples} "
+            bench_job = self.exec(
+                self.command_wrapper(
+                    (
+                        "bigcodebench.generate "
+                        f"--model {model} "
+                        f"--temperature {temperature} "
+                        f"--n_samples {n_samples} "
+                        f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
+                        "--subset full "
+                        f"--tp {self.run_config.tensor_parallel_size} "
+                        "--backend vllm "
+                        f"--root /results/temp/{self.run_id}/{task}_{temperature}_{n_samples} "
+                    ),
+                    apptainer=True,
+                    slurm=slurm,
+                    slurm_partition="gpu",
                 ),
-                slurm,
+                slurm=slurm,
             )
 
-            self.exec(
-                (
-                    "bigcodebench.evaluate "
-                    f"--model {model} "
-                    f"--temperature {temperature} "
-                    f"--n_samples {n_samples} "
-                    f"--samples results/temp/{self.run_id}/{task}_{temperature}_{n_samples}/{model.replace('/', '--')}--main--bigcodebench-complete--vllm-{temperature}-{n_samples}-sanitized_calibrated.jsonl "
-                    "--execution local "
-                    f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
-                    "--subset full "
-                    "--backend vllm "
+            copy_job = self.exec(
+                self.command_wrapper(
+                    f"cp -r ./results/temp/{self.run_id}/{task}_{temperature}_{n_samples} ./results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples}",
+                    apptainer=False,
+                    slurm=slurm,
+                    slurm_partition="cpu",
+                    slurm_dependency=[bench_job],
                 ),
-                slurm,
-                eval=True,
-                slurm_dependency=job_res.stdout.strip().split(" ")[-1],
+                slurm=slurm,
             )
 
-            self.exec(
-                (
-                    "bigcodebench.evaluate "
-                    f"--model {model} "
-                    f"--temperature {temperature} "
-                    f"--n_samples {n_samples} "
-                    f"--samples results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples}/{model.replace('/', '--')}--main--bigcodebench-complete--vllm-{temperature}-{n_samples}-sanitized_calibrated.jsonl "
-                    "--execution local "
-                    f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
-                    "--subset hard "
-                    "--backend vllm "
+            full_eval_job = self.exec(
+                self.command_wrapper(
+                    (
+                        "bigcodebench.evaluate "
+                        f"--model {model} "
+                        f"--temperature {temperature} "
+                        f"--n_samples {n_samples} "
+                        f"--samples /results/temp/{self.run_id}/{task}_{temperature}_{n_samples}/{model.replace('/', '--')}--main--bigcodebench-{'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'}--vllm-{temperature}-{n_samples}-sanitized_calibrated.jsonl "
+                        "--execution local "
+                        f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
+                        "--subset full "
+                        "--backend vllm "
+                    ),
+                    apptainer=True,
+                    benchmark_eval=True,
+                    slurm=slurm,
+                    slurm_partition="cpu",
+                    slurm_dependency=[copy_job],
                 ),
-                slurm,
-                eval=True,
-                slurm_dependency=job_res.stdout.strip().split(" ")[-1],
+                slurm=slurm,
             )
 
-    def exec(
-        self, command: str, slurm: bool, eval: bool = False, slurm_dependency: str = ""
+            hard_eval_job = self.exec(
+                self.command_wrapper(
+                    (
+                        "bigcodebench.evaluate "
+                        f"--model {model} "
+                        f"--temperature {temperature} "
+                        f"--n_samples {n_samples} "
+                        f"--samples /results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples}/{model.replace('/', '--')}--main--bigcodebench-{'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'}--vllm-{temperature}-{n_samples}-sanitized_calibrated.jsonl "
+                        "--execution local "
+                        f"--split {'complete' if task == Task.BIG_CODE_BENCHMARK_COMPLETE else 'instruct'} "
+                        "--subset hard "
+                        "--backend vllm "
+                    ),
+                    apptainer=True,
+                    benchmark_eval=True,
+                    slurm=slurm,
+                    slurm_partition="cpu",
+                    slurm_dependency=[copy_job],
+                ),
+                slurm=slurm,
+            )
+
+            jobs.extend([full_eval_job, hard_eval_job])
+
+        self.exec(
+            self.command_wrapper(
+                f"uv run global-benchmark save {self.run_id} {task} {model}",
+                apptainer=False,
+                slurm=slurm,
+                slurm_partition="cpu",
+                slurm_dependency=jobs,
+            ),
+            slurm=slurm,
+        )
+
+    def command_wrapper(
+        self,
+        command: str,
+        apptainer: bool,
+        slurm: bool,
+        slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
+        slurm_dependency: List[str] = [],
+        benchmark_eval: bool = False,
     ):
         """
         Execute a command in the container.
         """
-        # Implement the logic to execute a command in the BigCode evaluation harness container
-        cmd = (
-            "apptainer "
-            "exec "
-            "--nv "
-            "-B /scratch "
-            f"{self.images_directory}/{self.framework}{'_eval' if eval else '_gen'} "
-            f"{command}"
-        )
+
+        if apptainer:
+            command = self.get_apptainer_command(
+                command,
+                self.run_config.images_directory
+                / (self.framework.value + ("_eval" if benchmark_eval else "_gen")),
+                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+            )
 
         if slurm:
-            cmd = self.get_slurm_command(cmd, slurm_dependency)
+            command = self.get_slurm_command(command, slurm_partition, slurm_dependency)
 
-        print(f"[black]Running command: {cmd}[black]")
-        return subprocess.run(
-            cmd,
-            shell=True,
-            check=True,
-            env=os.environ.copy(),
-            stdout=subprocess.PIPE if slurm else None,
-            text=slurm,
-        )
+        return command
+
+    def save(
+        self,
+        model: str,
+        task: Task,
+    ) -> None:
+        """
+        Save the results of the benchmark.
+        """
+
+        run_path = Path("results/temp") / self.run_id
+
+        for folder in run_path.glob(f"{task.value}*"):
+            for result_file in folder.glob("*_pass_at_k.json"):
+                with open(result_file, "r") as f:
+                    data = json.load(f)
+
+                subset, temperature, n_samples = folder.name.split("_")[-3:]
+
+                self.store(
+                    model,
+                    task,
+                    {
+                        "pass@1": data["pass@1"],
+                        "subset": subset,
+                        "temperature": temperature,
+                        "n_samples": n_samples,
+                    },
+                )

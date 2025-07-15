@@ -1,11 +1,11 @@
 Bootstrap: docker
-From: python:3.9-slim
+From: python:3.10-slim
 
 %post
     # Install system dependencies
     apt-get update
     apt-get install -y --no-install-recommends git
-    rm -rf /var/lib/apt/lists/*
+    apt-get -y install build-essential
 
     git clone --depth 1 https://gitlab.inria.fr/tlasnier/lm-evaluation-harness
     cd lm-evaluation-harness
