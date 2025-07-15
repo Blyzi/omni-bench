@@ -88,7 +88,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
         Get the Container command for the benchmark.
         """
 
-        cmd = f"{self.run_config.container} exec --nv -c --cwd {cwd} "
+        cmd = f"{self.run_config.container_system} exec --nv -c --cwd {cwd} "
 
         if len(self.run_config.binds + binds) > 0:
             cmd += f"-B {','.join((bind.source.as_posix() + ':' + bind.target.as_posix() for bind in self.run_config.binds + binds))} "
