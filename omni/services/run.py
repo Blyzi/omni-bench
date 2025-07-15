@@ -1,7 +1,7 @@
 from typing import List, Union
-from global_benchmark.utils.schemas import RunConfig, SlurmConfig
-from global_benchmark.utils.enums import Task, Benchmark
-from global_benchmark.utils.maps import benchmark_map, task_map
+from omni.utils.schemas import RunConfig, SlurmConfig
+from omni.utils.enums import Task, Benchmark
+from omni.utils.maps import benchmark_map, task_map
 from collections import defaultdict
 from rich import print
 from uuid import uuid4

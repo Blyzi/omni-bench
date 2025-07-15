@@ -1,4 +1,4 @@
-from global_benchmark.utils.enums import Task, Benchmark
+from omni.utils.enums import Task, Benchmark
 
 
 task_map: dict[Task, Benchmark] = {

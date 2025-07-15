@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import List, Literal, Union
 import inquirer
 import typer
-from global_benchmark.benchmarks import BenchmarkRunner
-from global_benchmark.utils.enums import Benchmark, Task
-from global_benchmark.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
-from global_benchmark.utils.functions import get_short_precision
+from omni.benchmarks import BenchmarkRunner
+from omni.utils.enums import Benchmark, Task
+from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
+from omni.utils.functions import get_short_precision
 
 
 class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
@@ -99,7 +99,7 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
 
         self.exec(
             self.command_wrapper(
-                f"uv run global-benchmark save {self.run_id} {task} {model}",
+                f"uv run omni save {self.run_id} {task} {model}",
                 apptainer=False,
                 slurm=slurm,
                 slurm_partition="cpu",

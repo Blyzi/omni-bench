@@ -2,7 +2,7 @@ import os
 import json
 from pydantic import ValidationError
 import typer
-from global_benchmark.utils.schemas import SlurmConfig, RunConfig
+from omni.utils.schemas import SlurmConfig, RunConfig
 
 
 def get_run_config() -> RunConfig:
@@ -17,7 +17,7 @@ def get_run_config() -> RunConfig:
                 raise typer.BadParameter("config.json does not contain 'run' section.")
     else:
         raise typer.BadParameter(
-            "config.json file not found. Please generate it using `global-benchmark config`."
+            "config.json file not found. Please generate it using `omni config`."
         )
 
     try:
@@ -42,7 +42,7 @@ def get_slurm_config() -> SlurmConfig:
                 )
     else:
         raise typer.BadParameter(
-            "config.json file not found. Please generate it using `global-benchmark config`."
+            "config.json file not found. Please generate it using `omni config`."
         )
 
     try:

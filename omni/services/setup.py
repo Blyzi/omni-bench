@@ -17,7 +17,7 @@ def setup(images_directory: Path, definitions: list) -> None:
 
     for image in definitions:
         # Check all def files that start with the image name
-        def_files = list(Path("global_benchmark/definitions").glob(f"{image}*.def"))
+        def_files = list(Path("omni/definitions").glob(f"{image}*.def"))
 
         for def_file in def_files:
             # Check if the definition file exists

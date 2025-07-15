@@ -1,4 +1,4 @@
-from global_benchmark.utils.schemas.run_config import Precision
+from omni.utils.schemas.run_config import Precision
 
 
 def get_short_precision(precision: Precision) -> str:

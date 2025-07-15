@@ -1,5 +1,5 @@
-from global_benchmark.utils.enums import Benchmark
-from global_benchmark.benchmarks import (
+from omni.utils.enums import Benchmark
+from omni.benchmarks import (
     LlmEvaluationHarnessRunner,
     BigCodeBenchRunner,
     BigCodeEvaluationHarnessRunner,

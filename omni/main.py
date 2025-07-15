@@ -3,8 +3,8 @@ from typing import List
 import typer
 import inquirer
 from typing_extensions import Annotated
-from global_benchmark.utils.enums import Task, Benchmark
-from global_benchmark import services
+from omni.utils.enums import Task, Benchmark
+from omni import services
 import os
 
 

@@ -68,7 +68,7 @@ wheels = [
 ]
 
 [[package]]
-name = "global-benchmark"
+name = "omni"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

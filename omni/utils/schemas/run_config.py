@@ -1,10 +1,9 @@
-import json
 from pathlib import Path
 from typing import Final
-from pydantic import Field, BaseModel, ValidationError, model_validator
+from pydantic import Field, BaseModel
 import typer
-from global_benchmark.utils.enums import Precision
-from global_benchmark.utils.schemas.apptainer_bind import ApptainerBind
+from omni.utils.enums import Precision
+from omni.utils.schemas.apptainer_bind import ApptainerBind
 
 
 class RunConfig(BaseModel):

@@ -17,7 +17,7 @@ This project use [uv](https://docs.astral.sh/uv/getting-started/installation/) f
 
 ```bash
 uv sync
-uv run global-benchmark config
+uv run omni config
 ```
 
 The command will install all the dependencies and create a default configuration file `config.json`. You can modify this file to change the default settings for the project.
@@ -41,7 +41,6 @@ The configuration file `config.json` is used to define the default settings for 
 - `gpu_gres`: The SLURM generic resources to use for GPU tasks. This is used to specify the number of GPUs to use.
 - `mem`: The amount of memory to use for the tasks. This is used to specify the amount of memory to allocate for the tasks.
 - `cpus_per_gpu`: The number of CPUs per GPU to use for GPU tasks.
-- `concurrency`: (Optional) The number of concurrent tasks to run. This is used to specify the number of tasks to run in parallel.
 - `account`: (Optional) The SLURM account to use for the tasks. This is used to specify the account to charge the resources to.
 - `gpu_constraint`: (Optional) The GPU constraint to use for the tasks. This is used to specify the type of GPU to use.
 - `exclude`: (Optional) The list of nodes to exclude from the tasks. This is used to specify the nodes that should not be used for the tasks.
@@ -51,7 +50,7 @@ The configuration file `config.json` is used to define the default settings for 
 For reproducibility and security purpose, each framework is run in a apptainer container. To build the container, run the following command:
 
 ```bash
-uv run global-benchmark setup
+uv run omni setup
 ```
 
 Parameters:
@@ -63,7 +62,7 @@ Parameters:
 To run the benchmarks, use the following command:
 
 ```bash
-uv run global-benchmark run
+uv run omni run
 ```
 Parameters:
 - `--model`(Optional): The model to be used for the benchmarks. This can be a local model or a remote model. You can use the CLI to define it if you prefer.

@@ -1,8 +1,8 @@
 import json
-from global_benchmark.benchmarks import BenchmarkRunner
+from omni.benchmarks import BenchmarkRunner
 from typing import List, Literal, Union
-from global_benchmark.utils.enums import Benchmark, Task
-from global_benchmark.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
+from omni.utils.enums import Benchmark, Task
+from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
 from pathlib import Path
 
 
@@ -50,7 +50,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
 
         self.exec(
             self.command_wrapper(
-                f"uv run global-benchmark save {self.run_id} {task} {model}",
+                f"uv run omni save {self.run_id} {task} {model}",
                 apptainer=False,
                 slurm=slurm,
                 slurm_partition="cpu",

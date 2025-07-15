@@ -4,8 +4,8 @@ import subprocess
 from typing import Any, List, Literal, Union
 import os
 import json
-from global_benchmark.utils.enums import Benchmark, Task
-from global_benchmark.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
+from omni.utils.enums import Benchmark, Task
+from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
 
 
 class BenchmarkRunner(metaclass=ABCMeta):
@@ -37,7 +37,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
 
         cmd = (
             "sbatch "
-            '--job-name="global-benchmark" '
+            '--job-name="omni" '
             f"--mem={self.slurm_config.mem} "
             "--output=./logs/slurm-%j.out "
             "--error=./logs/slurm-%j.err "
