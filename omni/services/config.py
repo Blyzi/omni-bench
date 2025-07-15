@@ -13,7 +13,8 @@ def get_run_config() -> RunConfig:
     """
     if os.path.exists("config.yml"):
         with open("config.yml", "r") as f:
-            config = yaml.safe_load(f)
+            config_text = os.path.expandvars(f.read())
+            config = yaml.safe_load(config_text)
 
             if not isinstance(config, dict) or "run" not in config:
                 raise typer.BadParameter("config.yml does not contain 'run' section.")
@@ -36,7 +37,8 @@ def get_slurm_config() -> SlurmConfig:
     """
     if os.path.exists("config.yml"):
         with open("config.yml", "r") as f:
-            config = yaml.safe_load(f)
+            config_text = os.path.expandvars(f.read())
+            config = yaml.safe_load(config_text)
 
             if not isinstance(config, dict) or "slurm" not in config:
                 raise typer.BadParameter("config.yml does not contain 'slurm' section.")
