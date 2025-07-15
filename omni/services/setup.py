@@ -28,12 +28,10 @@ def setup(definitions: list, run_config: RunConfig) -> None:
 
             # Check if the image already exists
             image_path = Path(run_config.images_directory) / def_file.name.replace(
-                ".def", ""
+                ".def", ".sif"
             )
             if image_path.exists():
-                print(
-                    f"[green]Image {def_file.name.replace('.def', '')} already exists.[/green]"
-                )
+                print(f"[green]Image {image_path.name} already exists.[/green]")
                 continue
 
             # Build the image
@@ -41,7 +39,6 @@ def setup(definitions: list, run_config: RunConfig) -> None:
                 [
                     run_config.container_system.value,
                     "build",
-                    "--sandbox",
                     str(image_path),
                     str(def_file),
                 ],

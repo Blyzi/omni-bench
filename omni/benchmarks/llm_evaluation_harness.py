@@ -77,7 +77,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
         if container:
             command = self.get_container_command(
                 command,
-                self.run_config.images_directory / self.framework.value,
+                self.framework.value,
                 [ContainerBind(source=Path("results"), target=Path("/results"))],
             )
 

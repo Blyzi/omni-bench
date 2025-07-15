@@ -164,8 +164,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
         if container:
             command = self.get_container_command(
                 command,
-                self.run_config.images_directory
-                / (self.framework.value + ("_eval" if benchmark_eval else "_gen")),
+                self.framework.value + ("_eval" if benchmark_eval else "_gen"),
                 [ContainerBind(source=Path("results"), target=Path("/results"))],
             )
 

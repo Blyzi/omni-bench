@@ -80,7 +80,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
     def get_container_command(
         self,
         command: str,
-        image: Path,
+        image_name: str,
         binds: list[ContainerBind] = [],
         cwd: Path = Path("."),
     ) -> str:
@@ -93,7 +93,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
         if len(self.run_config.binds + binds) > 0:
             cmd += f"-B {','.join((bind.source.as_posix() + ':' + bind.target.as_posix() for bind in self.run_config.binds + binds))} "
 
-        cmd += f"{image} {command} "
+        cmd += f"{self.run_config.images_directory}/{image_name}.sif {command} "
 
         return cmd
 
