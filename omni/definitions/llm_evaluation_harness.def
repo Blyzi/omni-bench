@@ -7,7 +7,7 @@ From: python:3.10-slim
     apt-get install -y --no-install-recommends git
     apt-get -y install build-essential
 
-    git clone --depth 1 https://gitlab.inria.fr/tlasnier/lm-evaluation-harness
+    git clone --depth 1 https://github.com/Blyzi/lm-evaluation-harness
     cd lm-evaluation-harness
     pip install --upgrade pip
     pip install -e .

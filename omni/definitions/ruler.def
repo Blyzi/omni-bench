@@ -15,7 +15,7 @@ From: python:3.10-slim
     # Download NLTK data in the correct directory
     python -c "import nltk; nltk.download('punkt', download_dir='/usr/share/nltk_data'); nltk.download('punkt_tab', download_dir='/usr/share/nltk_data')"
 
-    git clone https://github.com/NVIDIA/RULER.git
+    git clone https://github.com/Blyzi/RULER.git
     cd RULER/scripts/data/synthetic/json/
     python download_paulgraham_essay.py
     bash download_qa_dataset.sh
