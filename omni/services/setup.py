@@ -8,8 +8,8 @@ def setup(images_directory: Path, definitions: list) -> None:
     Setup the environment.
 
     Args:
-        images_directory (Path): Directory to store SIF images.
-        definitions (List[str]): List of SIF images to build.
+        images_directory (Path): Directory to store images.
+        definitions (List[str]): List of images to build.
     """
 
     # Create the directory if it doesn't exist

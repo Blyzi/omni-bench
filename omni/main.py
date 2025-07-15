@@ -67,16 +67,16 @@ def setup(
     Setup the environment.
 
     Args:
-        sif_images_directory (str): Directory to store SIF images.
-        definitions (List[Benchmarks]): List of SIF images to build.
+        images_directory (str): Directory to store images.
+        definitions (List[Benchmarks]): List of images to build.
     """
 
     if definitions == []:
         response = inquirer.prompt(
             [
                 inquirer.Checkbox(
-                    "sif_images",
-                    message="Select SIF images to build",
+                    "images",
+                    message="Select images to build",
                     choices=[
                         (benchmark.value, benchmark.value) for benchmark in Benchmark
                     ],
@@ -85,7 +85,7 @@ def setup(
         )
         if response is None:
             raise typer.Exit()
-        definitions = response["sif_images"]
+        definitions = response["images"]
 
     services.setup(images_directory, definitions)
 
