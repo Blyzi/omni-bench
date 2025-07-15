@@ -7,7 +7,7 @@ From: python:3.9-slim
     apt-get install -y --no-install-recommends git
     rm -rf /var/lib/apt/lists/*
 
-    git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
+    git clone --depth 1 https://gitlab.inria.fr/tlasnier/lm-evaluation-harness
     cd lm-evaluation-harness
     pip install --upgrade pip
     pip install -e .

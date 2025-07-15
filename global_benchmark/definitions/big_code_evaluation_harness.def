@@ -6,7 +6,7 @@ From: ghcr.io/nuprl/multipl-e-evaluation
     apt-get update
     apt-get install -y git
 
-    git clone https://github.com/bigcode-project/bigcode-evaluation-harness.git
+    git clone https://gitlab.inria.fr/tlasnier/bigcode-evaluation-harness
     cd bigcode-evaluation-harness
 
     pip install --upgrade pip
