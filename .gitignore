@@ -1,7 +1,13 @@
+# Omni folders
+
 images/
-.venv/
-__pycache__/
 logs/
-.ruff_cache/
 results/
 config.yml
+
+# Python folders
+.venv/
+__pycache__/
+.ruff_cache/
+
+._.

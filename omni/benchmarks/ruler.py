@@ -5,7 +5,7 @@ import inquirer
 import typer
 from omni.benchmarks.runner import BenchmarkRunner
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import RunConfig, BenchmarkConfig, SlurmConfig, ApptainerBind
+from omni.utils.schemas import RunConfig, BenchmarkConfig, SlurmConfig, ContainerBind
 
 
 class RulerRunner(BenchmarkRunner):
@@ -77,7 +77,7 @@ class RulerRunner(BenchmarkRunner):
         mkdir_job = self.exec(
             self.command_wrapper(
                 f"mkdir -p ./results/temp/{self.run_id}/{Task.RULER_SYNTHETIC}",
-                apptainer=False,
+                container=False,
                 slurm=slurm,
                 slurm_partition="cpu",
             ),
@@ -103,7 +103,7 @@ class RulerRunner(BenchmarkRunner):
                     f"export SEQ_LENGTHS=({' '.join(context_lengths)}) && "
                     f"./run.sh {model} synthetic' "
                 ),
-                apptainer=True,
+                container=True,
                 slurm=slurm,
                 slurm_partition="gpu",
                 slurm_dependency=[mkdir_job],
@@ -114,7 +114,7 @@ class RulerRunner(BenchmarkRunner):
         self.exec(
             self.command_wrapper(
                 f"uv run omni save {self.run_id} {task} {model}",
-                apptainer=False,
+                container=False,
                 slurm=slurm,
                 slurm_partition="cpu",
                 slurm_dependency=[ruler_job],
@@ -125,7 +125,7 @@ class RulerRunner(BenchmarkRunner):
     def command_wrapper(
         self,
         command: str,
-        apptainer: bool,
+        container: bool,
         slurm: bool,
         slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
@@ -134,12 +134,12 @@ class RulerRunner(BenchmarkRunner):
         Execute a command in the container.
         """
 
-        if apptainer:
-            command = self.get_apptainer_command(
+        if container:
+            command = self.get_container_command(
                 command,
                 self.run_config.images_directory / self.framework.value,
                 [
-                    ApptainerBind(
+                    ContainerBind(
                         source=Path(
                             f"./results/temp/{self.run_id}/{Task.RULER_SYNTHETIC}"
                         ),

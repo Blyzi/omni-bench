@@ -6,7 +6,7 @@ import inquirer
 import typer
 from omni.benchmarks import BenchmarkRunner
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig, BenchmarkConfig
+from omni.utils.schemas import ContainerBind, SlurmConfig, RunConfig, BenchmarkConfig
 from omni.utils.functions import get_short_precision
 
 
@@ -65,7 +65,7 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
             create_folder_job = self.exec(
                 self.command_wrapper(
                     f"mkdir -p ./results/temp/{self.run_id}/{task} ",
-                    apptainer=False,
+                    container=False,
                     slurm=slurm,
                     slurm_partition="cpu",
                 ),
@@ -89,7 +89,7 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
             benchmark_job = self.exec(
                 self.command_wrapper(
                     cmd,
-                    apptainer=True,
+                    container=True,
                     slurm=slurm,
                     slurm_dependency=[create_folder_job],
                     slurm_partition="gpu",
@@ -102,7 +102,7 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
         self.exec(
             self.command_wrapper(
                 f"uv run omni save {self.run_id} {task} {model}",
-                apptainer=False,
+                container=False,
                 slurm=slurm,
                 slurm_partition="cpu",
                 slurm_dependency=jobs,
@@ -113,7 +113,7 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
     def command_wrapper(
         self,
         command: str,
-        apptainer: bool,
+        container: bool,
         slurm: bool,
         slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
@@ -122,11 +122,11 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
         Execute a command in the container.
         """
 
-        if apptainer:
-            command = self.get_apptainer_command(
+        if container:
+            command = self.get_container_command(
                 command,
                 self.run_config.images_directory / self.framework.value,
-                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+                [ContainerBind(source=Path("results"), target=Path("/results"))],
                 Path("/bigcode-evaluation-harness"),
             )
 

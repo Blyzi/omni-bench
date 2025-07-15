@@ -39,7 +39,7 @@ def setup(definitions: list, run_config: RunConfig) -> None:
             # Build the image
             subprocess.run(
                 [
-                    "apptainer",
+                    run_config.container_system.value,
                     "build",
                     "--sandbox",
                     str(image_path),

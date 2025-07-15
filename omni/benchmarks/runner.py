@@ -5,7 +5,7 @@ from typing import Any, List, Literal, Union
 import os
 import json
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind, BenchmarkConfig
+from omni.utils.schemas import RunConfig, SlurmConfig, ContainerBind, BenchmarkConfig
 from rich import print
 
 
@@ -38,6 +38,9 @@ class BenchmarkRunner(metaclass=ABCMeta):
         if not self.slurm_config:
             raise ValueError("SLURM information is not provided.")
 
+        if self.slurm_config.prescript:
+            command = f"{self.slurm_config.prescript} && {command}"
+
         cmd = (
             "sbatch "
             '--job-name="omni" '
@@ -69,26 +72,23 @@ class BenchmarkRunner(metaclass=ABCMeta):
                 + " "
             )
 
-        if self.slurm_config.account:
-            cmd += f"-A {self.slurm_config.account} "
-
         if dependencies:
             cmd += f" --dependency={':'.join(dependencies)} "
 
         return cmd
 
-    def get_apptainer_command(
+    def get_container_command(
         self,
         command: str,
         image: Path,
-        binds: list[ApptainerBind] = [],
+        binds: list[ContainerBind] = [],
         cwd: Path = Path("."),
     ) -> str:
         """
-        Get the Apptainer command for the benchmark.
+        Get the Container command for the benchmark.
         """
 
-        cmd = f"apptainer exec --nv -c --cwd {cwd} "
+        cmd = f"{self.run_config.container} exec --nv -c --cwd {cwd} "
 
         if len(self.run_config.binds + binds) > 0:
             cmd += f"-B {','.join((bind.source.as_posix() + ':' + bind.target.as_posix() for bind in self.run_config.binds + binds))} "
@@ -136,7 +136,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
     def command_wrapper(
         self,
         command: str,
-        apptainer: bool,
+        container: bool,
         slurm: bool,
         slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],

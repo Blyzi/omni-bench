@@ -10,6 +10,7 @@ class SlurmConfig(BaseModel):
     cpu_partition: SlurmJobConfig
     gpu_partition: SlurmJobConfig
 
-    account: Optional[
-        Annotated[str, Field(description="Slurm account name for job submission")]
-    ] = None
+    prescript: Optional[str] = Field(
+        default=None,
+        description="Optional script to run before the main command in the container",
+    )

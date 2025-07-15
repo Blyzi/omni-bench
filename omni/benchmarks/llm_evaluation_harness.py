@@ -2,7 +2,7 @@ import json
 from omni.benchmarks import BenchmarkRunner
 from typing import List, Literal, Union
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
+from omni.utils.schemas import RunConfig, SlurmConfig, ContainerBind
 from pathlib import Path
 from omni.utils.schemas import BenchmarkConfig
 
@@ -44,7 +44,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
                     f"--log_samples "
                     "--confirm_run_unsafe_code "
                 ),
-                apptainer=True,
+                container=True,
                 slurm=slurm,
                 slurm_partition="gpu",
             ),
@@ -54,7 +54,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
         self.exec(
             self.command_wrapper(
                 f"uv run omni save {self.run_id} {task} {model}",
-                apptainer=False,
+                container=False,
                 slurm=slurm,
                 slurm_partition="cpu",
                 slurm_dependency=[job],
@@ -65,7 +65,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
     def command_wrapper(
         self,
         command: str,
-        apptainer: bool,
+        container: bool,
         slurm: bool,
         slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
@@ -74,11 +74,11 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
         Execute a command in the container.
         """
 
-        if apptainer:
-            command = self.get_apptainer_command(
+        if container:
+            command = self.get_container_command(
                 command,
                 self.run_config.images_directory / self.framework.value,
-                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+                [ContainerBind(source=Path("results"), target=Path("/results"))],
             )
 
         if slurm:

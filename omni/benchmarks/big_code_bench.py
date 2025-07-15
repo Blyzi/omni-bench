@@ -7,7 +7,7 @@ import inquirer
 import ast
 from omni.utils.enums import Benchmark, Task
 from rich import print
-from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig, BenchmarkConfig
+from omni.utils.schemas import ContainerBind, SlurmConfig, RunConfig, BenchmarkConfig
 
 
 class BigCodeBenchRunner(BenchmarkRunner):
@@ -73,7 +73,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                         "--backend vllm "
                         f"--root /results/temp/{self.run_id}/{task}_{temperature}_{n_samples} "
                     ),
-                    apptainer=True,
+                    container=True,
                     slurm=slurm,
                     slurm_partition="gpu",
                 ),
@@ -83,7 +83,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
             copy_job = self.exec(
                 self.command_wrapper(
                     f"cp -r ./results/temp/{self.run_id}/{task}_{temperature}_{n_samples} ./results/temp/{self.run_id}/{task}_hard_{temperature}_{n_samples}",
-                    apptainer=False,
+                    container=False,
                     slurm=slurm,
                     slurm_partition="cpu",
                     slurm_dependency=[bench_job],
@@ -104,7 +104,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                         "--subset full "
                         "--backend vllm "
                     ),
-                    apptainer=True,
+                    container=True,
                     benchmark_eval=True,
                     slurm=slurm,
                     slurm_partition="cpu",
@@ -126,7 +126,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
                         "--subset hard "
                         "--backend vllm "
                     ),
-                    apptainer=True,
+                    container=True,
                     benchmark_eval=True,
                     slurm=slurm,
                     slurm_partition="cpu",
@@ -140,7 +140,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
         self.exec(
             self.command_wrapper(
                 f"uv run omni save {self.run_id} {task} {model}",
-                apptainer=False,
+                container=False,
                 slurm=slurm,
                 slurm_partition="cpu",
                 slurm_dependency=jobs,
@@ -151,7 +151,7 @@ class BigCodeBenchRunner(BenchmarkRunner):
     def command_wrapper(
         self,
         command: str,
-        apptainer: bool,
+        container: bool,
         slurm: bool,
         slurm_partition: Union[Literal["cpu"], Literal["gpu"]],
         slurm_dependency: List[str] = [],
@@ -161,12 +161,12 @@ class BigCodeBenchRunner(BenchmarkRunner):
         Execute a command in the container.
         """
 
-        if apptainer:
-            command = self.get_apptainer_command(
+        if container:
+            command = self.get_container_command(
                 command,
                 self.run_config.images_directory
                 / (self.framework.value + ("_eval" if benchmark_eval else "_gen")),
-                [ApptainerBind(source=Path("results"), target=Path("/results"))],
+                [ContainerBind(source=Path("results"), target=Path("/results"))],
             )
 
         if slurm:
