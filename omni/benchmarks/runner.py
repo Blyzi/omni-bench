@@ -58,7 +58,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
             cmd += (
                 " ".join(
                     f"--{key.replace('_', '-')}='{value}'"
-                    for key, value in self.slurm_config.cpu_partition.model_dump().items()
+                    for key, value in self.slurm_config.cpu.model_dump().items()
                 )
                 + " "
             )
@@ -67,7 +67,7 @@ class BenchmarkRunner(metaclass=ABCMeta):
             cmd += (
                 " ".join(
                     f"--{key.replace('_', '-')}='{value}'"
-                    for key, value in self.slurm_config.gpu_partition.model_dump().items()
+                    for key, value in self.slurm_config.gpu.model_dump().items()
                 )
                 + " "
             )

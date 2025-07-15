@@ -7,8 +7,8 @@ class SlurmJobConfig(BaseModel):
 
 
 class SlurmConfig(BaseModel):
-    cpu_partition: SlurmJobConfig
-    gpu_partition: SlurmJobConfig
+    cpu: SlurmJobConfig
+    gpu: SlurmJobConfig
 
     prescript: Optional[str] = Field(
         default=None,
