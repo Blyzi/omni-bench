@@ -15,7 +15,7 @@ app = typer.Typer()
 @app.command()
 def run(
     model: Annotated[str, typer.Option("--model", "-m")] = "",
-    tasks: Annotated[List[Task], typer.Option("--tasks", "-t")] = [],
+    tasks: Annotated[List[Task], typer.Option("--task", "-t")] = [],
     slurm: bool = False,
 ):
     """
@@ -57,7 +57,7 @@ def run(
 
 @app.command()
 def setup(
-    definitions: Annotated[List[Benchmark], typer.Option()] = [],
+    definitions: Annotated[List[Benchmark], typer.Option("--definition", "-d")] = [],
 ):
     """
     Setup the environment.
