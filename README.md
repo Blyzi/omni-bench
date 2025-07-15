@@ -31,6 +31,8 @@ Parameters:
 - `--images-directory`(Optional): The directory containing the images to be used for the benchmarks. Be careful, some images are quite large (up to 20GB). The default is `./images`.
 - `--definitions`(Optional): The list of definitions files to build. You can use this parameter or the integrated CLI if you prefer.
 
+**Warning**: This command will take a while to run, as it needs to download the images and build the containers. The images are quite large, so make sure you have enough disk space available.
+
 ### Run benchmarks
 To run the benchmarks, use the following command:
 
@@ -52,3 +54,22 @@ Parameters:
 
 ### Results
 The results of the benchmarks are stored in the `results` directory. The results are stored in JSON format, making it easy to parse and analyze them.
+
+## Adding a new framework or adding a new benchmark
+
+### Adding a new benchmark
+If one of the supported frameworks supports a benchmark that is not currently supported, you can add it by following these steps:
+1. Go to the `task.py` file and add your tasks to the enum `Task`.
+2. Go to the `map.py` file and map your new tasks to the appropriate benchmark frameworks.
+
+All apptainer images are sandboxed, meaning you can directly modify the content of the container. This is useful if you want to do modify or create new benchmarks.
+
+### Adding a new framework
+If you want to add a new framework, you can do so by following these steps:
+1. Create a definition file for your framework in the `definitions` directory. This file should contain the necessary information for creating the container.
+2. Create a new file in the `benchmarks` directory for your framework. This file should contain the necessary code for running the benchmarks for your framework.
+    1. Implement the `exec` function that should run a command in the container.
+    2. Implement the `run` function that should run the benchmarks for your framework.
+    3. If necessary, implement the `get_parameters` function that will prompt the user for the parameters to use for the benchmarks.
+
+3. Go to the `benchmark_framework.py` file and add your new framework to the `BenchmarkFramework` enum.
