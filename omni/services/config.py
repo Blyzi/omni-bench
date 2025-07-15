@@ -1,27 +1,29 @@
 import os
-import json
+from pathlib import Path
+import yaml
 from pydantic import ValidationError
 import typer
-from omni.utils.schemas import SlurmConfig, RunConfig
+from omni.utils.enums import Precision
+from omni.utils.schemas import SlurmConfig, RunConfig, SlurmJobConfig
 
 
 def get_run_config() -> RunConfig:
     """
-    Get the run config from the config.json file or use the default values.
+    Get the run config from the config.yml file or use the default values.
     """
-    if os.path.exists("config.json"):
-        with open("config.json", "r") as f:
-            config = json.load(f)
+    if os.path.exists("config.yml"):
+        with open("config.yml", "r") as f:
+            config = yaml.safe_load(f)
 
             if not isinstance(config, dict) or "run" not in config:
-                raise typer.BadParameter("config.json does not contain 'run' section.")
+                raise typer.BadParameter("config.yml does not contain 'run' section.")
     else:
         raise typer.BadParameter(
-            "config.json file not found. Please generate it using `omni config`."
+            "config.yml file not found. Please generate it using `omni config`."
         )
 
     try:
-        config = RunConfig.load(config["run"])
+        config = RunConfig(**config["run"])
     except ValidationError as e:
         raise typer.BadParameter(f"\n{e}")
 
@@ -32,21 +34,19 @@ def get_slurm_config() -> SlurmConfig:
     """
     Get the Slurm config from the config.json file or use the default values.
     """
-    if os.path.exists("config.json"):
-        with open("config.json", "r") as f:
-            config = json.load(f)
+    if os.path.exists("config.yml"):
+        with open("config.yml", "r") as f:
+            config = yaml.safe_load(f)
 
             if not isinstance(config, dict) or "slurm" not in config:
-                raise typer.BadParameter(
-                    "config.json does not contain 'slurm' section."
-                )
+                raise typer.BadParameter("config.yml does not contain 'slurm' section.")
     else:
         raise typer.BadParameter(
-            "config.json file not found. Please generate it using `omni config`."
+            "config.yml file not found. Please generate it using `omni config`."
         )
 
     try:
-        config = SlurmConfig.load(config["slurm"])
+        config = SlurmConfig(**config["slurm"])
     except ValidationError as e:
         raise typer.BadParameter(f"\n{e}")
 
@@ -55,17 +55,26 @@ def get_slurm_config() -> SlurmConfig:
 
 def gen_config():
     """
-    Generate a config.json file with default values.
+    Generate a config.yml file with default values.
     """
 
-    if os.path.exists("config.json"):
-        print("config.json already exists. Please delete it to generate a new one.")
+    if os.path.exists("config.yml"):
+        print("config.yml already exists. Please delete it to generate a new one.")
+        return
 
-    with open("config.json", "w") as f:
-        json.dump(
+    with open("config.yml", "w") as f:
+        yaml.safe_dump(
             {
-                "run": RunConfig().model_dump(mode="json"),
-                "slurm": SlurmConfig().model_dump(mode="json"),
+                "run": RunConfig(
+                    dtype=Precision.BF16,
+                    tensor_parallel_size=1,
+                    binds=[],
+                    images_directory=Path("images"),
+                ).model_dump(mode="json"),
+                "slurm": SlurmConfig(
+                    cpu_partition=SlurmJobConfig(),
+                    gpu_partition=SlurmJobConfig(),
+                ).model_dump(mode="json"),
             },
             f,
             indent=4,

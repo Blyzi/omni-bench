@@ -4,4 +4,4 @@ __pycache__/
 logs/
 .ruff_cache/
 results/
-config.json
+config.yml

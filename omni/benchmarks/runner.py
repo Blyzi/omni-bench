@@ -38,7 +38,6 @@ class BenchmarkRunner(metaclass=ABCMeta):
         cmd = (
             "sbatch "
             '--job-name="omni" '
-            f"--mem={self.slurm_config.mem} "
             "--output=./logs/slurm-%j.out "
             "--error=./logs/slurm-%j.err "
             "--kill-on-invalid-dep=yes "
@@ -50,26 +49,19 @@ class BenchmarkRunner(metaclass=ABCMeta):
         )
 
         if slurm_partition == "cpu":
-            cmd += (
-                f"-p {self.slurm_config.cpu_partition} "
-                f"-c {self.slurm_config.cpus_per_task} "
+            cmd += " ".join(
+                f"--{key}={value}"
+                for key, value in self.slurm_config.cpu_partition.model_dump().items()
             )
 
         elif slurm_partition == "gpu":
-            cmd += (
-                f"-p {self.slurm_config.gpu_partition} "
-                f"--gres={self.slurm_config.gpu_gres} "
-                f"--cpus-per-gpu={self.slurm_config.cpus_per_gpu} "
+            cmd += " ".join(
+                f"--{key}={value}"
+                for key, value in self.slurm_config.gpu_partition.model_dump().items()
             )
-
-            if self.slurm_config.gpu_constraint:
-                cmd += f'--constraint="{self.slurm_config.gpu_constraint}" '
 
         if self.slurm_config.account:
             cmd += f"-A {self.slurm_config.account} "
-
-        if self.slurm_config.exclude:
-            cmd += f'--exclude="{self.slurm_config.exclude}" '
 
         if dependencies:
             cmd += f" --dependency={':'.join(dependencies)} "
