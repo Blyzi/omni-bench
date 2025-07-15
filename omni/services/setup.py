@@ -1,19 +1,20 @@
 from pathlib import Path
 import subprocess
 from rich import print
+from omni.utils.schemas import RunConfig
 
 
-def setup(images_directory: Path, definitions: list) -> None:
+def setup(definitions: list, run_config: RunConfig) -> None:
     """
     Setup the environment.
 
     Args:
-        images_directory (Path): Directory to store images.
         definitions (List[str]): List of images to build.
+        run_config (RunConfig): Information related to the run.
     """
 
     # Create the directory if it doesn't exist
-    images_directory.mkdir(parents=True, exist_ok=True)
+    run_config.images_directory.mkdir(parents=True, exist_ok=True)
 
     for image in definitions:
         # Check all def files that start with the image name
@@ -26,7 +27,9 @@ def setup(images_directory: Path, definitions: list) -> None:
                 continue
 
             # Check if the image already exists
-            image_path = Path(images_directory) / def_file.name.replace(".def", "")
+            image_path = Path(run_config.images_directory) / def_file.name.replace(
+                ".def", ""
+            )
             if image_path.exists():
                 print(
                     f"[green]Image {def_file.name.replace('.def', '')} already exists.[/green]"

@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List
 import typer
 import inquirer
@@ -58,16 +57,12 @@ def run(
 
 @app.command()
 def setup(
-    images_directory: Annotated[Path, typer.Option("--images-directory", "-i")] = Path(
-        "images"
-    ),
     definitions: Annotated[List[Benchmark], typer.Option()] = [],
 ):
     """
     Setup the environment.
 
     Args:
-        images_directory (str): Directory to store images.
         definitions (List[Benchmarks]): List of images to build.
     """
 
@@ -87,7 +82,7 @@ def setup(
             raise typer.Exit()
         definitions = response["images"]
 
-    services.setup(images_directory, definitions)
+    services.setup(definitions, run_config=services.get_run_config())
 
 
 @app.command()
