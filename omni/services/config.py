@@ -4,7 +4,7 @@ import yaml
 from pydantic import ValidationError
 import typer
 from omni.utils.enums import Precision
-from omni.utils.schemas import SlurmConfig, RunConfig, SlurmJobConfig
+from omni.utils.schemas import SlurmConfig, RunConfig, SlurmJobConfig, BenchmarkConfig
 
 
 def get_run_config() -> RunConfig:
@@ -75,6 +75,7 @@ def gen_config():
                     cpu_partition=SlurmJobConfig(),
                     gpu_partition=SlurmJobConfig(),
                 ).model_dump(mode="json"),
+                "benchmarks": BenchmarkConfig().model_dump(mode="json", by_alias=True),
             },
             f,
             indent=4,

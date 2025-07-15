@@ -7,7 +7,7 @@ import inquirer
 import ast
 from omni.utils.enums import Benchmark, Task
 from rich import print
-from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
+from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig, BenchmarkConfig
 
 
 class BigCodeBenchRunner(BenchmarkRunner):
@@ -17,12 +17,14 @@ class BigCodeBenchRunner(BenchmarkRunner):
         self,
         run_id: str,
         run_config: RunConfig,
+        benchmark_config: BenchmarkConfig,
         slurm_config: SlurmConfig,
     ):
         super().__init__(
             run_id,
             Benchmark.BIG_CODE_BENCHMARK,
             run_config,
+            benchmark_config,
             slurm_config,
         )
 

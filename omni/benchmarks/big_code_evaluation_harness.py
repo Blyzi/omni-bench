@@ -6,7 +6,7 @@ import inquirer
 import typer
 from omni.benchmarks import BenchmarkRunner
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig
+from omni.utils.schemas import ApptainerBind, SlurmConfig, RunConfig, BenchmarkConfig
 from omni.utils.functions import get_short_precision
 
 
@@ -17,12 +17,14 @@ class BigCodeEvaluationHarnessRunner(BenchmarkRunner):
         self,
         run_id: str,
         run_config: RunConfig,
+        benchmark_config: BenchmarkConfig,
         slurm_config: SlurmConfig,
     ):
         super().__init__(
             run_id,
             Benchmark.BIG_CODE_EVALUATION_HARNESS,
             run_config,
+            benchmark_config,
             slurm_config,
         )
 

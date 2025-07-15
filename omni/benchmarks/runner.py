@@ -5,7 +5,7 @@ from typing import Any, List, Literal, Union
 import os
 import json
 from omni.utils.enums import Benchmark, Task
-from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
+from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind, BenchmarkConfig
 
 
 class BenchmarkRunner(metaclass=ABCMeta):
@@ -16,11 +16,13 @@ class BenchmarkRunner(metaclass=ABCMeta):
         run_id: str,
         framework: Benchmark,
         run_config: RunConfig,
+        benchmark_config: BenchmarkConfig,
         slurm_config: Union[None, SlurmConfig],
     ):
         self.run_id = run_id
         self.framework = framework
         self.run_config = run_config
+        self.benchmark_config = benchmark_config
         self.slurm_config = slurm_config
 
     def get_slurm_command(

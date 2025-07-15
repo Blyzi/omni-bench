@@ -4,6 +4,7 @@ from typing import List, Literal, Union
 from omni.utils.enums import Benchmark, Task
 from omni.utils.schemas import RunConfig, SlurmConfig, ApptainerBind
 from pathlib import Path
+from omni.utils.schemas import BenchmarkConfig
 
 
 class LlmEvaluationHarnessRunner(BenchmarkRunner):
@@ -11,12 +12,14 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
         self,
         run_id: str,
         run_config: RunConfig,
+        benchmark_config: BenchmarkConfig,
         slurm_config: Union[None, SlurmConfig],
     ):
         super().__init__(
             run_id,
             Benchmark.LLM_EVALUATION_HARNESS,
             run_config,
+            benchmark_config,
             slurm_config,
         )
 
@@ -34,7 +37,7 @@ class LlmEvaluationHarnessRunner(BenchmarkRunner):
                 (
                     "lm_eval "
                     "--model vllm "
-                    f"--model_args pretrained={model},tensor_parallel_size={self.run_config.tensor_parallel_size},dtype={self.run_config.dtype},gpu_memory_utilization=0.9 "
+                    f"--model_args pretrained={model},tensor_parallel_size={self.run_config.tensor_parallel_size},dtype={self.run_config.dtype},gpu_memory_utilization=0.9,{','.join(f'{key}={value}' for key, value in self.benchmark_config.llm_evaluation_harness.model_dump().items())} "
                     f"--tasks {task} "
                     "--batch_size auto "
                     f"--output_path /results/temp/{self.run_id}/{task} "
