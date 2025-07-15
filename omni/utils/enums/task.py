@@ -60,3 +60,6 @@ class Task(str, Enum):
     APPS_INTRODUCTORY = "apps-introductory"
     APPS_INTERVIEW = "apps-interview"
     APPS_COMPETITION = "apps-competition"
+
+    # Ruler
+    RULER_SYNTHETIC = "ruler_synthetic"

@@ -46,4 +46,6 @@ task_map: dict[Task, Benchmark] = {
     Task.APPS_INTRODUCTORY: Benchmark.BIG_CODE_EVALUATION_HARNESS,
     Task.APPS_INTERVIEW: Benchmark.BIG_CODE_EVALUATION_HARNESS,
     Task.APPS_COMPETITION: Benchmark.BIG_CODE_EVALUATION_HARNESS,
+    # Ruler
+    Task.RULER_SYNTHETIC: Benchmark.RULER,
 }

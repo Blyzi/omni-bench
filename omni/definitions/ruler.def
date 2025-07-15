@@ -1,0 +1,32 @@
+Bootstrap: docker
+From: python:3.10-slim
+
+%post
+    # Install system dependencies
+    apt-get update
+    apt-get install -y --no-install-recommends git
+    apt-get -y install build-essential wget
+
+    # Install Python dependencies
+    pip install --upgrade pip
+    # pip install Cython torch
+    pip install nemo_toolkit['asr'] nltk bs4 flask flask_restful html2text google-generativeai sshtunnel_requests wonderwords openai tiktoken tenacity accelerate huggingface_hub transformers vllm
+
+    # Download NLTK data in the correct directory
+    python -c "import nltk; nltk.download('punkt', download_dir='/usr/share/nltk_data'); nltk.download('punkt_tab', download_dir='/usr/share/nltk_data')"
+
+    git clone https://github.com/NVIDIA/RULER.git
+    cd RULER/scripts/data/synthetic/json/
+    python download_paulgraham_essay.py
+    bash download_qa_dataset.sh
+
+    # Bad permission for run.sh
+    cd /RULER/scripts
+    awk '!/^GPUS="1"( |$)/' run.sh > tmp && mv tmp run.sh
+    awk '/^SEQ_LENGTHS=\($/ {skip=1; next} /^\)$/ && skip {skip=0; next} !skip' config_models.sh > tmp && mv tmp config_models.sh
+    chmod +x run.sh
+
+
+
+
+    
