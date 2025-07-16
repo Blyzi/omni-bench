@@ -21,5 +21,5 @@ def save(
         run_id, run_config, benchmark_config, slurm_config
     )
 
-    with FileLock(f"results/temp/{run_id}.lock"):
+    with FileLock(f"results/temp/{run_id}/.lock"):
         framework.save(model, task)
