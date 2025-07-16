@@ -2,6 +2,7 @@ from typing import Union
 from omni.utils.enums import Task
 from omni.utils.maps import benchmark_map, task_map
 from omni.utils.schemas import RunConfig, SlurmConfig, BenchmarkConfig
+from filelock import FileLock
 
 
 def save(
@@ -20,4 +21,5 @@ def save(
         run_id, run_config, benchmark_config, slurm_config
     )
 
-    framework.save(model, task)
+    with FileLock(f"results/temp/{run_id}.lock"):
+        framework.save(model, task)
