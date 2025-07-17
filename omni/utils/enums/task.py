@@ -13,6 +13,7 @@ class Task(str, Enum):
     HUMANEVAL = "humaneval"
     HUMANEVAL_PLUS = "humaneval_plus"
     HUMANEVAL_INSTRUCT = "humaneval_instruct"
+    HUMANEVAL_64 = "humaneval_64"
 
     MMLU = "mmlu"
 
